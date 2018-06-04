@@ -57,12 +57,12 @@ add_action( 'plugins_loaded', function(){
 			$check = $wpdb->get_results("SELECT * FROM $wpdb->postmeta WHERE meta_key = 'twitter_ID' AND  meta_value = $item->id LIMIT 1");
 			
 			if(!$check){
-			
+				
 				$ID = wp_insert_post(
 					array(
 						'post_type' => 'post',
 						'post_title'    => preg_replace($regex, ' ', $item->text),
-						'post_excerpt'   => $item->text,
+						'post_content'   => preg_replace($regex, '<a href="$0" target="_blank">$0</a>', $item->text),
 						'post_status'   => 'publish',
 						'post_author'   => 1,
 						'post_date' => date('Y-m-d h:i:s', strtotime($item->created_at))
@@ -155,7 +155,11 @@ add_action( 'plugins_loaded', function(){
 					</tr>
 				</table>
 			
-				<?php do_settings_sections('libraries-twitter-import'); ?>
+				<?php do_settings_sections('libraries-twitter-import');
+				
+				$twitterImport = new twitterImport();
+				$twitterImport->updateResponce();
+				?>
 				
 				<?php submit_button(); ?>
 
