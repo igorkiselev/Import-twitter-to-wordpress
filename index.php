@@ -155,11 +155,7 @@ add_action( 'plugins_loaded', function(){
 					</tr>
 				</table>
 			
-				<?php do_settings_sections('libraries-twitter-import');
-				
-				$twitterImport = new twitterImport();
-				$twitterImport->updateResponce();
-				?>
+				<?php do_settings_sections('libraries-twitter-import'); ?>
 				
 				<?php submit_button(); ?>
 
