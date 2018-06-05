@@ -26,24 +26,16 @@ add_action( 'plugins_loaded', function(){
 		
 		private $url = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
 		
-		private $options = array(
-			'oauth_access_token' => '711926221-u7JSjAPHa6r8BBEYKoxvHrksDbIyqNrBJkJ2deE3',
-			'oauth_access_token_secret' => 'pKd4hmzxfqO375vDgxEqjZKViq7nhcXVZH4tHuHySxl3l',
-			'consumer_key' => '5jS2fd9C4YKwNo6pE24q466vT',
-			'consumer_secret' => 'QJUpVQeiTjZQyFGIQPZZFdEX3tXC1aKhPJ1yXbYc16IkaFwm0o'
-		);
 		
-		private $account = '?screen_name=jbnstudio';
-		
-		private function returnResponce(){
+		private function returnResponce($options = '', $account = ''){
 			
 			require_once('TwitterAPIExchange.php');
 
 			$requestMethod = 'GET';
 
-			$twitter = new TwitterAPIExchange($this->options);
+			$twitter = new TwitterAPIExchange($options);
 
-			$response = $twitter->setGetfield($this->account)->buildOauth($this->url, $requestMethod)->performRequest();
+			$response = $twitter->setGetfield($account)->buildOauth($this->url, $requestMethod)->performRequest();
 
 			return $response;
 			
@@ -76,9 +68,9 @@ add_action( 'plugins_loaded', function(){
 			}
 		}
 		
-		public function updateResponce(){
+		public function updateResponce($options = '', $account = ''){
 			
-			$array = json_decode($this->returnResponce());
+			$array = json_decode($this->returnResponce($options, $account));
 			
 			foreach ($array as &$value) {
 				$this->insertPost($value);
@@ -89,7 +81,6 @@ add_action( 'plugins_loaded', function(){
 	}
 	
 	
-
 	add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), function($links){
 		
 		return array_merge( $links, array('<a href="' . admin_url( 'options-general.php?page=libraries-twitter-import' ) . '">'.__('Settings','libraries-twitter-import').'</a>',) );
@@ -178,8 +169,13 @@ add_action( 'plugins_loaded', function(){
 	});
 	
 	function update_twitter_feed_function(){
-		$twitterImport = new twitterImport();
-		$twitterImport->updateResponce();
+		$settings = get_option( 'libraries-twitter-import' );
+		$account = get_option( 'libraries-twitter-import-account' );
+		
+		if($settings){
+			$twitterImport = new twitterImport();
+			$twitterImport->updateResponce($settings,'?screen_name='.$account);
+		}
 	}
 	
 	add_action('update_twitter_feed', 'update_twitter_feed_function');
@@ -192,7 +188,7 @@ add_action( 'plugins_loaded', function(){
 	});
 	
 });
-	
+
 
 
 
