@@ -35,10 +35,13 @@ class twitterImport
         global $wpdb;
 
         $regex = "@(https?://([-\w\.]+[-\w])+(:\d+)?(/([\w/_\.#-]*(\?\S+)?[^\.\s])?)?)@";
-
+		
         $check = $wpdb->get_results("SELECT * FROM $wpdb->postmeta WHERE meta_key = 'twitter_ID' AND  meta_value = $item->id LIMIT 1");
 
         if (!$check) {
+			
+			preg_match_all("/(#\w+)/", $item->text, $tags);
+			
             $ID = wp_insert_post(
                     array(
                         'post_type' => 'post',
@@ -53,9 +56,18 @@ class twitterImport
             set_post_format($ID, 'status');
 
             add_post_meta($ID, 'twitter_ID', $item->id, true);
+			
+			if(!empty($tags[0])){
+			
+				for($i=0;$i<count($tags[0]);$i++) { $tags[0][$i] = substr($tags[0][$i],1); }
+			
+				wp_set_post_tags($ID, $tags[0], true );
+			
+			}
         }
     }
-
+	
+    
     public function updateResponce($options = '', $account = '')
     {
         $array = json_decode($this->returnResponce($options, $account));
@@ -64,7 +76,13 @@ class twitterImport
             $this->insertPost($value);
         }
     }
+    
 }
+
+add_action('admin_init', function () {
+    register_setting('libraries-twitter-import', 'libraries-twitter-import');
+    register_setting('libraries-twitter-import', 'libraries-twitter-import-account');
+});
 
 register_activation_hook(__FILE__, function(){
     if (! wp_next_scheduled ( 'justbenice_twitter_hourly_event' )) {
@@ -86,10 +104,7 @@ register_deactivation_hook(__FILE__, function(){
 	wp_clear_scheduled_hook('justbenice_twitter_hourly_event');
 });
 
-add_action('admin_init', function () {
-    register_setting('libraries-twitter-import', 'libraries-twitter-import');
-    register_setting('libraries-twitter-import', 'libraries-twitter-import-account');
-});
+
 
 add_filter('plugin_action_links_'.plugin_basename(__FILE__), function ($links) {
 
@@ -108,7 +123,7 @@ add_action('admin_menu', function () {
 	<div class="wrap">
 		
 		<h1><?php 
-
+		    
             _e('Twitter import plugin', 'libraries-twitter-import'); ?></h1>
 
 		<form method="post" action="options.php">
